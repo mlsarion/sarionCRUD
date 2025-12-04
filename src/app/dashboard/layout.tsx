@@ -18,6 +18,7 @@ export default function DashboardLayout({
   const [dark, setDark] = useState(false);
   const [tokenValue, setTokenValue] = useState<string | null>(null);
 
+  // Check token on mount
   useEffect(() => {
     const t = getToken();
     if (!t) {
@@ -27,11 +28,13 @@ export default function DashboardLayout({
     }
   }, [router]);
 
+  // Logout handler
   function handleLogout() {
-    logoutUser(); // clear token/session
-    router.push("/login"); // redirect to login page
+    logoutUser();
+    router.push("/login");
   }
 
+  // Dark mode toggle
   useEffect(() => {
     if (dark) {
       document.documentElement.classList.add("dark");
@@ -40,9 +43,9 @@ export default function DashboardLayout({
     }
   }, [dark]);
 
+  // Navigation items (Reports removed)
   const navItems = [
     { label: "Overview", href: "/dashboard" },
-    { label: "Reports", href: "/dashboard/reports" },
     { label: "Settings", href: "/dashboard/settings" },
   ];
 
@@ -57,6 +60,7 @@ export default function DashboardLayout({
       >
         <h1 className="text-2xl font-bold mb-4 dark:text-white">Dashboard</h1>
 
+        {/* Navigation */}
         <nav className="flex flex-col gap-3">
           {navItems.map((item) => (
             <button
@@ -73,6 +77,7 @@ export default function DashboardLayout({
           ))}
         </nav>
 
+        {/* Dark Mode Toggle */}
         <div className="mt-10 flex gap-3">
           <Button
             onClick={() => setDark(!dark)}
@@ -84,11 +89,12 @@ export default function DashboardLayout({
           </Button>
         </div>
 
+        {/* Logout */}
         <div className="mt-4">
           <Button
             variant="destructive"
             className="w-full"
-            onClick={handleLogout} // ✅ fixed
+            onClick={handleLogout}
           >
             Logout
           </Button>

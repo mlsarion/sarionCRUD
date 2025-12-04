@@ -18,3 +18,10 @@ export function logoutUser() {
   if (typeof window !== 'undefined')
     localStorage.removeItem(TOKEN_KEY);
 }
+
+export function clearToken() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem(TOKEN_KEY);
+  }
+}
+

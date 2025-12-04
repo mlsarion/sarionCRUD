@@ -1,8 +1,9 @@
 "use client";
 
-import { getToken } from "@/lib/auth";
+import { useRouter } from "next/navigation";
+import { getToken, clearToken } from "@/lib/auth";
 import { jwtDecode } from "jwt-decode";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 
 interface JwtPayload {
@@ -14,30 +15,43 @@ interface JwtPayload {
 }
 
 export default function DashboardPage() {
-  const token = getToken();
+  const router = useRouter();
   const [showFull, setShowFull] = useState(false);
+  const [username, setUsername] = useState("Guest");
+  const [role, setRole] = useState<string | null>(null);
+  const token = getToken();
 
-  let username = "Guest";
-  if (token) {
+  useEffect(() => {
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
     try {
       const decoded = jwtDecode<JwtPayload>(token);
-      if (decoded.username) {
-        username = decoded.username;
+      if (decoded.exp * 1000 < Date.now()) {
+        clearToken();
+        router.push("/login");
+        return;
       }
+
+      setUsername(decoded.username || "Guest");
+      setRole(decoded.role || null);
     } catch (e) {
       console.error("Token decoding failed:", e);
+      clearToken();
+      router.push("/login");
     }
-  }
+  }, [token, router]);
 
   const cards = [
     { title: "Overview", desc: "Quick glance at your stats." },
-    { title: "Reports", desc: "Detailed insights and analytics." },
     { title: "Settings", desc: "Manage your preferences." },
   ];
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-neutral-900 p-6">
-      {/* Animated Title */}
+      {/* Greeting */}
       <motion.h1
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -47,13 +61,27 @@ export default function DashboardPage() {
         Welcome, {username}
       </motion.h1>
 
-      {/* Bearer Token Section */}
+      {/* Role Info */}
+      {role && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="mb-6 p-4 rounded-lg bg-white dark:bg-neutral-800 shadow-md border border-neutral-200 dark:border-neutral-700"
+        >
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            Role: <span className="font-semibold">{role}</span>
+          </p>
+        </motion.div>
+      )}
+
+      {/* Token Display */}
       {token && (
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="mb-8 p-4 rounded-lg bg-white dark:bg-neutral-800 shadow-md border border-neutral-200 dark:border-neutral-700"
+          className="mb-6 p-4 rounded-lg bg-white dark:bg-neutral-800 shadow-md border border-neutral-200 dark:border-neutral-700"
         >
           <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-2">
             Your Bearer Token:
@@ -84,7 +112,7 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* Animated Cards */}
+      {/* Dashboard Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {cards.map((card, i) => (
           <motion.div
@@ -105,6 +133,20 @@ export default function DashboardPage() {
         ))}
       </div>
 
+      {/* Logout */}
+      <motion.button
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        onClick={() => {
+          clearToken();
+          router.push("/login");
+        }}
+        className="mt-8 px-4 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-medium shadow-md"
+      >
+        Logout
+      </motion.button>
+
       {/* Footer */}
       <motion.p
         initial={{ opacity: 0 }}
@@ -112,7 +154,7 @@ export default function DashboardPage() {
         transition={{ delay: 1 }}
         className="mt-10 text-neutral-500 dark:text-neutral-400 text-center"
       >
-        I will add more soon hehehehe…
+        More features coming soon…
       </motion.p>
     </div>
   );
